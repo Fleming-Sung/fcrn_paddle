@@ -1,4 +1,5 @@
 import paddle
+import h5py
 import os
 from paddle.io import Dataset, DataLoader
 from PIL import Image
@@ -12,26 +13,34 @@ class PngLoader(Dataset):
         super(PngLoader, self).__init__()
         self.png_path = png_path
         self.lists = lists
+        self.nyu = h5py.File(self.png_path)
+        self.imgs = self.nyu['images']
+        self.dpts = self.nyu['depths']
 
     def __getitem__(self, index):
         img_idx = self.lists[index]
-        dpt_dir = os.path.join(self.png_path, 'nyu_depths')
-        img_dir = os.path.join(self.png_path, 'nyu_images')
-        img_name = str(img_idx)+'.jpg'
-        dpt_name = str(img_idx) + '.png'
-        img_path = os.path.join(img_dir, img_name)
-        dtp_path = os.path.join(dpt_dir, dpt_name)
+        img = self.imgs[img_idx].transpose(2, 1, 0)  # HWC
+        dpt = self.dpts[img_idx].transpose(1, 0)
+        img = Image.fromarray(img)
+        dpt = Image.fromarray(dpt)
 
-        img_ori = Image.open(img_path)
-        dpt_ori = Image.open(dtp_path)
+        # dpt_dir = os.path.join(self.png_path, 'nyu_depths')
+        # img_dir = os.path.join(self.png_path, 'nyu_images')
+        # img_name = str(img_idx)+'.jpg'
+        # dpt_name = str(img_idx) + '.png'
+        # img_path = os.path.join(img_dir, img_name)
+        # dtp_path = os.path.join(dpt_dir, dpt_name)
+        #
+        # img_ori = Image.open(img_path)
+        # dpt_ori = Image.open(dtp_path)
 
         input_transform = transforms.Compose([transforms.Resize(228),
                                               transforms.ToTensor()])
 
         target_depth_transform = transforms.Compose([transforms.Resize(228),
                                                      transforms.ToTensor()])
-        img = input_transform(img_ori)
-        dpt = target_depth_transform(dpt_ori)
+        img = input_transform(img)
+        dpt = target_depth_transform(dpt)
 
         img = paddle.transpose(img, perm=[0, 2, 1])
         dpt = paddle.transpose(dpt, perm=[0, 2, 1])
@@ -75,7 +84,7 @@ def load_split():
 
 # pngpath = './nyu_v2'
 # 数据集成载入
-def load(png_path, batch_size, subset = 'train'):
+def load(png_path, batch_size, subset='train'):
     # batch_size = 16
 
     # 1.Load data
@@ -97,7 +106,7 @@ def load(png_path, batch_size, subset = 'train'):
 
 # test
 def test_loader():
-    png_path = './nyu_v2'
+    png_path = './data/nyu_depth_v2_labeled.mat'
     batch_size = 16
     dataloader = load(png_path, batch_size)
     for i, (image, depth) in enumerate(dataloader):

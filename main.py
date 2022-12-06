@@ -199,6 +199,39 @@ class FCRN(nn.Layer):
 
 
 '''2. split and load data'''
+# get split index
+def load_split():
+    # 读取事先设定的txt文件中的索引以进行数据集划分
+    current_directoty = os.getcwd()
+    train_lists_path = os.path.join(current_directoty, 'data', 'trainIdxs.txt')
+    test_lists_path = os.path.join(current_directoty, 'data', 'testIdxs.txt')
+
+    train_f = open(train_lists_path)
+    test_f = open(test_lists_path)
+
+    train_lists = []
+    test_lists = []
+
+    train_lists_line = train_f.readline()
+    while train_lists_line:
+        train_lists.append(int(train_lists_line) - 1)
+        train_lists_line = train_f.readline()
+    train_f.close()
+
+    test_lists_line = test_f.readline()
+    while test_lists_line:
+        test_lists.append(int(test_lists_line) - 1)
+        test_lists_line = test_f.readline()
+    test_f.close()
+
+    # split 80% of train_data as train_data, while the rest 20% as validation data.
+    val_start_idx = int(len(train_lists) * 0.8)
+    val_lists = train_lists[val_start_idx:-1]
+    train_lists = train_lists[0:val_start_idx]
+
+    return train_lists, val_lists, test_lists
+
+
 
 
 # 3. configuration details of train process
