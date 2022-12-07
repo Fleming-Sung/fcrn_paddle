@@ -10,7 +10,7 @@ from pathlib import Path
 
 # 0.Initial Index
 batch_size = 16
-num_epochs = 500
+num_epochs = 5000
 start_epoch = 0
 my_lr = 0.0001
 monentum = 0.9
@@ -75,7 +75,7 @@ model.fit(train_data,
           epochs=num_epochs,
           batch_size=batch_size,
           verbose=1,
-          save_freq=2,
+          save_freq=300,
           save_dir='./model')
 
 # 用 evaluate 在测试集上对模型进行验证
